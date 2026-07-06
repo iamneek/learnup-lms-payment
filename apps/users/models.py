@@ -35,6 +35,6 @@ class User(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
-    manager = UserManager()
+    objects = UserManager()
     def __str__(self):
         return self.email
