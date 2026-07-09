@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -22,14 +23,16 @@ class RegisterView(APIView):
 
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
 
     def get(self, request):
-        serializer = UserSerializer(data=request.user)
+        serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = None
 
     def post(self, request):
         try:
