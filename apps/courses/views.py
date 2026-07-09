@@ -1,3 +1,17 @@
-from django.shortcuts import render
+from rest_framework.viewsets import ModelViewSet
 
-# Create your views here.
+from apps.courses.models import Course
+from .serializers import CourseSerializer
+from rest_framework.permissions import IsAdminUser, AllowAny
+
+
+class CourseViewSet(ModelViewSet):
+    serializer_class = CourseSerializer
+    queryset = Course.objects.all()
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            self.permission_classes = [IsAdminUser]
+        else:
+            self.permission_classes = [AllowAny]
+        return [permission() for permission in self.permission_classes]
