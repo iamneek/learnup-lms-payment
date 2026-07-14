@@ -26,7 +26,8 @@ class PaymentMethod(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} ({self.get_type_display()})"
+        type_display = dict(self.Type.choices).get(self.type, self.type)
+        return f"{self.name} ({type_display})"
 
 
 class Payment(models.Model):
@@ -61,4 +62,5 @@ class Payment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Payment {self.id} for Enrollment {self.enrollment.id} - Status: {self.get_status_display()}"
+        status_display = dict(self.statusChoices.choices).get(self.status, self.status)
+        return f"Payment {self.id} for Enrollment {self.enrollment.id} - Status: {status_display}"
