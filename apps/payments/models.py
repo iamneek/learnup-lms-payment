@@ -1,4 +1,7 @@
+import uuid
+
 from django.db import models
+from django.contrib.auth import get_user_model
 
 
 class PaymentMethod(models.Model):
@@ -18,3 +21,44 @@ class PaymentMethod(models.Model):
     account_name = models.CharField(max_length=50, blank=True, null=True)
     account_number = models.CharField(max_length=50, blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    instructions = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_type_display()})"
+
+
+class Payment(models.Model):
+    class statusChoices(models.TextChoices):
+        SUBMITTED = "submitted", "Submitted"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    enrollment = models.ForeignKey(
+        "enrollments.Enrollment", on_delete=models.PROTECT, related_name="payments"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=statusChoices.choices,
+        default=statusChoices.SUBMITTED,
+    )
+    payment_method = models.ForeignKey(
+        PaymentMethod,
+        on_delete=models.SET_NULL,
+        related_name="payments",
+        null=True,
+        blank=True,
+    )
+    receipt = models.ImageField(upload_to="receipts/", blank=False, null=False)
+    rejection_message = models.TextField(blank=True, null=True)
+    reviewer = models.ForeignKey(
+        get_user_model(), on_delete=models.PROTECT, null=True, blank=True
+    )
+    review_date = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Payment {self.id} for Enrollment {self.enrollment.id} - Status: {self.get_status_display()}"
