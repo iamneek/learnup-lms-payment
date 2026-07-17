@@ -26,7 +26,7 @@ class EnrollmentViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
+        if getattr(user, "is_staff", False):
             return Enrollment.objects.all()
         return Enrollment.objects.filter(student=user)
 
