@@ -55,3 +55,13 @@ class PaymentViewSet(ModelViewSet):
         )
         out_serializer = PaymentAdminSerializer(payment)
         return Response(out_serializer.data, status=200)
+
+    # TODO: Make this creation logic robust, avoid creating payments for enrollments that don't belong to the user
+    # TODO: Make sure that once the enrollment is paid or rejeced, then no new payment can be created
+    def perform_create(self, serializer):
+        enrollment = serializer.validated_data["enrollment"]
+        if enrollment.student != self.request.user:
+            raise PermissionError(
+                "You can only create payments for your own enrollment."
+            )
+        serializer.save()

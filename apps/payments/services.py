@@ -9,6 +9,7 @@ def approve_payment(payment, reviewer):
     payment.status = Payment.statusChoices.APPROVED
     payment.reviewer = reviewer
     payment.review_date = timezone.now()
+    payment.rejection_message = None
     payment.save()
 
     enrollment = payment.enrollment
