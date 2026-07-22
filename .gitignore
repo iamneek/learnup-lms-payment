@@ -13,3 +13,4 @@ wheels/
 !.env.example
 db.sqlite3
 .vscode/
+media/
