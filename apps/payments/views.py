@@ -1,4 +1,5 @@
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from .models import Payment
 from .serializers import (
@@ -6,10 +7,13 @@ from .serializers import (
     PaymentCreateSerializer,
     PaymentRejectSerializer,
     PaymentSerializer,
+    PaymentMethodSerializer,
 )
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from .services import approve_payment, reject_payment
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from .models import PaymentMethod
 
 
 class PaymentViewSet(ModelViewSet):
@@ -56,12 +60,27 @@ class PaymentViewSet(ModelViewSet):
         out_serializer = PaymentAdminSerializer(payment)
         return Response(out_serializer.data, status=200)
 
-    # TODO: Make this creation logic robust, avoid creating payments for enrollments that don't belong to the user
-    # TODO: Make sure that once the enrollment is paid or rejeced, then no new payment can be created
     def perform_create(self, serializer):
         enrollment = serializer.validated_data["enrollment"]
         if enrollment.student != self.request.user:
-            raise PermissionError(
+            raise PermissionDenied(
                 "You can only create payments for your own enrollment."
             )
+        if (
+            Payment.objects.filter(enrollment=enrollment)
+            .exclude(status=Payment.statusChoices.REJECTED)
+            .exists()
+        ):
+            raise ValidationError(
+                "A payment for this enrollment already exists. You cannot create a new payment."
+            )
         serializer.save()
+
+
+class PaymentMethodView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        payment_methods = PaymentMethod.objects.filter(is_active=True)
+        serializer = PaymentMethodSerializer(payment_methods, many=True)
+        return Response(serializer.data, status=200)
